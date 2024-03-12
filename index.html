@@ -1,22 +1,50 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Camera Capture</title>
+<style>
+    #gallery {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .captured-photo {
+        width: 150px;
+        height: 150px;
+        margin: 5px;
+        object-fit: cover;
+    }
+</style>
 </head>
 <body>
-    <video id="video" width="640" height="480" autoplay></video>
+    <h1> Capture Item Images</h1>
+    <video id="video" width="480" height="640" autoplay></video>
     <button id="snap">Capture</button>
-    <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+    <canvas id="canvas" width="480" height="480" style="display: none;"></canvas>
+
+    <div id="gallery"></div>
 
     <script>
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const snapButton = document.getElementById('snap');
+        const gallery = document.getElementById('gallery');
+        const capturedImages = [];
+
+        // Access the back camera
+        const constraints = {
+            video: {
+                facingMode: 'environment'
+            }
+        };
 
         // Access the camera and stream to the video element
-        navigator.mediaDevices.getUserMedia({ video: true })
+        navigator.mediaDevices.getUserMedia(constraints)
             .then(stream => {
                 video.srcObject = stream;
             })
@@ -25,15 +53,39 @@
                 alert('Error accessing the camera. Please make sure your camera is connected and permissions are granted.');
             });
 
+        // Function to generate a unique ID of 10 digits
+        function generateID() {
+            return Math.floor(Math.random() * 9000000000) + 1000000000;
+        }
+
         // Capture an image when the snap button is clicked
         snapButton.addEventListener('click', function() {
             const context = canvas.getContext('2d');
+            context.clearRect(0, 0, canvas.width, canvas.height);
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Here you can send the image data to a server or do something else with it
-            const imageData = canvas.toDataURL('image/png');
-            console.log('Captured image data:', imageData);
+            // Convert the image to base64
+            const imageData = canvas.toDataURL('image/jpeg', 0.5); // Adjust quality (0.5 means 50% quality)
+
+            // Generate a unique ID
+            const imageID = generateID();
+
+            // Store the captured image in the array
+            capturedImages.push({ id: imageID, data: imageData });
+
+            // Display the captured photo below
+            const img = document.createElement('img');
+            img.src = imageData;
+            img.alt = 'Captured Photo';
+            img.classList.add('captured-photo');
+            img.dataset.id = imageID;
+            gallery.appendChild(img);
         });
+
+        // Example: Print the array of captured images
+        function printCapturedImages() {
+            console.log(capturedImages);
+        }
     </script>
 </body>
 </html>
